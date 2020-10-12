@@ -7,19 +7,17 @@ enum
     next
 };
 
-void StringListInit(char*** list)
-{
-    list[data] = NULL;
-    list[next] = NULL;
-}
-
 void StringListAdd(char*** list, char* str)
 {
+    if(list == NULL)
+    {
+        return;
+    }
     char** node = (char**)malloc(sizeof(char*) * 2);
     node[data] = (char*)malloc(sizeof(char) * strlen(str) + next);
 
     // copy our data to node
-    strcpy((char*)node[data], str);
+    if(node[data]!= NULL) memcpy((char*)node[data], str, strlen(str)+1);
     node[next] = NULL;
 
     // check that our list empty
@@ -59,6 +57,11 @@ void PrintList(char** list)
 
 void StringListRemove(char** list, char* str)
 {
+    if(list == NULL)
+    {
+        return;
+    }
+
     char** node = *list;
     char** prev_node = NULL;
 
@@ -66,7 +69,7 @@ void StringListRemove(char** list, char* str)
     {
         if (!strcmp((char*)node[data], str))
         {
-             // delete data in our node that we search
+            // delete data in our node that we search
             free((char*)node[data]);
 
             if (prev_node)
@@ -86,8 +89,38 @@ void StringListRemove(char** list, char* str)
     }
 }
 
+void StringListDestroy(char*** list)
+{
+    if (list == NULL)
+    {
+        printf("%s\n", "List destroy");
+        return;
+    }
+
+    char** node = (*list);
+    char** temp = NULL;
+
+    while(node != NULL)
+    {
+        temp = node[next];
+        free(node[data]);
+        (*list) = temp;
+        node = (char*)node[next];
+    }
+
+    free((char*)list[data]);
+    free(*list);
+    (*list) = NULL;
+    printf("%s", "List was destroyed\n");
+}
+
 int StringListSize(char** list)
 {
+    if(list == NULL)
+    {
+        return;
+    }
+
     int count = 0;
     char** node = list;
 
@@ -103,6 +136,11 @@ int StringListSize(char** list)
 
 int StringListIndexOf(char** list, char* str)
 {
+    if(list == NULL)
+    {
+        return;
+    }
+
     char** node = *list;
     int amount = 0;
 
@@ -119,11 +157,42 @@ int StringListIndexOf(char** list, char* str)
     return -1;
 }
 
+
+void StringListSort(char** list)
+{
+    if(list == NULL)
+    {
+        return;
+    }
+
+    char** tmp = NULL;
+    for(char** node = (char**)*list; node[next] != NULL; node = (char**)node[next])
+    {
+        char** node_min_element = node;
+        for(char** iter_node = (char**)node[next]; iter_node != NULL; iter_node = (char**)iter_node[next])
+        {
+            if(strcmp((char*)iter_node[data], (char*)node_min_element[data]) < 0)
+                node_min_element = iter_node;
+        }
+        tmp = node[data];
+        node[data] = node_min_element[data];
+        node_min_element[data] = tmp;
+    }
+}
+
 int main()
 {
     char **list = NULL;
 
     StringListAdd(&list, "abc1");
+    StringListAdd(&list, "abc3");
+    StringListAdd(&list, "abc1");
+    StringListAdd(&list, "abc2");
+    StringListAdd(&list, "abc1");
+    StringListAdd(&list, "abc1");
+    StringListAdd(&list, "abc2");
+    StringListAdd(&list, "abc3");
+    StringListAdd(&list, "abc4");
     StringListAdd(&list, "abc2");
     StringListAdd(&list, "abc3");
     StringListAdd(&list, "abc4");
@@ -133,6 +202,13 @@ int main()
     printf("%s\t%d\n", "Element index:", StringListIndexOf(&list, "abc2"));
     printf("%s\t%d\n", "Size list:",  StringListSize(list));
 
-    StringListRemove(&list, "abc3");
+
+    StringListSort(&list);
+    PrintList(list);
+
+    StringListRemove(&list, "abc1");
+    PrintList(list);
+
+    StringListDestroy(&list);
     PrintList(list);
 }
